@@ -16,3 +16,15 @@ export const userRegistration = (receivedMessage: Request, ws:CustomWebSocket) =
 ws.send(JSON.stringify(updatedMessage));
 registerPlayer(name, password, ws.index);
 };
+
+export const createGame = (ws: CustomWebSocket) => {
+    const updatedMessage : Request = {
+        type: 'create_game',
+        data: JSON.stringify({
+            idGame: ws.index,
+            idPlayer: ws.index
+        }),
+        id: 0,
+    };
+    ws.send(JSON.stringify(updatedMessage));
+};
