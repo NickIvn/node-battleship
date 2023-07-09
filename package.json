@@ -13,7 +13,21 @@
     "keywords": [],
     "license": "ISC",
     "devDependencies": {
-        "nodemon": "^2.0.16"
+        "@types/eslint": "^8.44.0",
+        "@types/nodemon": "^1.19.2",
+        "@types/uuid": "^9.0.2",
+        "@types/ws": "^8.5.5",
+        "@typescript-eslint/eslint-plugin": "^5.61.0",
+        "@typescript-eslint/parser": "^5.61.0",
+        "cross-env": "^7.0.3",
+        "dotenv": "^16.3.1",
+        "eslint": "^8.44.0",
+        "nodemon": "^2.0.22",
+        "ts-loader": "^9.4.4",
+        "ts-node": "^10.9.1",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.1.6",
+        "uuid": "^9.0.0"
     },
     "dependencies": {
         "ws": "^8.8.0"
