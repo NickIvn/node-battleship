@@ -11,7 +11,7 @@ export const wsclients:CustomWebSocket[] = [];
 
 let idGame = 0;
 let roomId = 0;
-let idPlayer = 0;
+// let idPlayer = 0;
 
 console.log(`Start static http server on the ${HTTP_PORT} port!`);
 httpServer.listen(HTTP_PORT);
@@ -40,8 +40,8 @@ wss.on('connection', (ws:CustomWebSocket)=>{
         break;
       case 'add_user_to_room':
         idGame++;
-        idPlayer++;
-        createGame(ws, idGame, idPlayer);
+        // idPlayer++;
+        createGame(ws, idGame, receivedMessage);
         break;
       case 'add_ships':
         addMatrix(receivedMessage);

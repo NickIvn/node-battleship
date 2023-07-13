@@ -12,18 +12,24 @@ export interface Request {
 
 export interface IGameSession {
   gameId:number;
-  indexPlayer:number;
+  indexPlayer:string;
   gameBoard:Ship[]; 
 }
 
-export interface IRoomUsers {
+export interface IPlayer  {
   name: string;
   index: string;
 }
 
+export interface IRoomUsers {
+  roomId: number;
+  roomUsers: IPlayer[];
+}
+
+
 export interface IIndex {
   idGame: number;
-  idPlayer: number;
+  idPlayer: string;
   index: string;
 }
 

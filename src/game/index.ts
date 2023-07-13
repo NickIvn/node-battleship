@@ -2,7 +2,7 @@ import { gameSession } from '../data/index';
 import { attackPlayer } from '../sender/index';
 import { Ship } from '../types';
 
-function attackNeighboringCells(x: number, y: number, gameBoard: Ship[], index: number) {
+function attackNeighboringCells(x: number, y: number, gameBoard: Ship[], index: string) {
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             if (x + i >= 0 && x + i < gameBoard[y].length && y + j >= 0 && y + j < gameBoard.length) {
@@ -12,7 +12,7 @@ function attackNeighboringCells(x: number, y: number, gameBoard: Ship[], index: 
     }
 }
 
-export const getValueByXY = (gameId: number, index: number, x: number, y: number): string | undefined => {
+export const getValueByXY = (gameId: number, index: string, x: number, y: number): string | undefined => {
     const data = gameSession.find((data) => data.gameId === gameId && data.indexPlayer === index);
     if (data) {
         const gameBoard = data.gameBoard;
