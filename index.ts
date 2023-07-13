@@ -7,7 +7,8 @@ import { userRegistration, updateRoom, createGame, startGame, userAttack, turnUs
 const HTTP_PORT = 8181;
 export const wsclients:CustomWebSocket[] = [];
 
-export const roomUsers = [];
+// export const roomUsers = [];
+
 let idGame = 0;
 console.log(`Start static http server on the ${HTTP_PORT} port!`);
 httpServer.listen(HTTP_PORT);
@@ -39,11 +40,11 @@ wss.on('connection', (ws:CustomWebSocket)=>{
         break;
       case 'add_ships':
         startGame(ws, receivedMessage);
-        turnUser(ws);
+        turnUser(ws, receivedMessage);
         break;
       case 'attack':
         userAttack(ws, receivedMessage);
-        turnUser(ws);
+        turnUser(ws, receivedMessage);
         break;
       default:
          console.log(`Uknown message type ${type}`);
