@@ -25,6 +25,10 @@ export const indexes:IIndex[] = [];
 
 export const firstPlayerMessage: Request[] = [];
 
+export function resetFirstPlayer(): void {
+  firstPlayerMessage.length = 0;
+}
+
 export function playerExists(name: string): boolean {
     return players.some((player) => player.name === name);
   }

@@ -1,5 +1,5 @@
 import { CustomWebSocket, IIndex, Request } from '../types';
-import { placeShip, registerPlayer, resetRoomUsers, addIndex, indexes, roomRegister, roomUsers, firstPlayerMessage } from '../data/index';
+import { placeShip, registerPlayer, resetRoomUsers, addIndex, indexes, roomRegister, roomUsers, firstPlayerMessage, resetFirstPlayer } from '../data/index';
 import {getValueByXY} from '../game/index';
 import { players } from '../data/index';
 import { wsclients } from '../../index';
@@ -123,6 +123,7 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
     const filteredClients = wsclients.filter((client) => {
         const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
         return playerIndex !== undefined;
+        console.log(filteredClients);
     });
     if (firstPlayerMessage.length === 0) {
         firstPlayerMessage.push(receivedMessage);
@@ -133,10 +134,11 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
                 type: 'start_game',
                 data: JSON.stringify({
                     ships,
-                    currentPlayerIndex: indexPlayer,
+                    currentPlayerIndex: JSON.parse(firstPlayerMessage[0].data).indexPlayer,
                 }),
                 id: 0,
             };
+            console.log(firstPlayerMessageToSend);
 
         //     ws.send(JSON.stringify(updatedMessage));
         //     placeShip(gameId, updatedIndexPlayer.idPlayer, ships);
@@ -150,18 +152,17 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
                 type: 'start_game',
                 data: JSON.stringify({
                     ships: JSON.parse(firstPlayerMessage[0].data).ships,
-                    currentPlayerIndex: secondPlayerData.idPlayer,
+                    currentPlayerIndex: indexPlayer,
                 }),
                 id: 0,
             };
+            console.log(updatedMessage);
             filteredClients.forEach((client) => {
                 client.send(JSON.stringify(updatedMessage));
             });
         }
-
-// } catch (error) {
-//     console.error('Error occurred in startGame:', error);
-}
+        resetFirstPlayer();
+    }
 };
 
 export const userAttack = (receivedMessage: Request) => {
@@ -235,10 +236,12 @@ export const attackPlayer = (x: number, y: number, indexPlayer: number, status: 
     let randomPlayer:any;
     if (status === 'miss' || status === 'killed'){
         randomPlayer = indexPlayer;
+        console.log(status);
     } else {
         const randomIndex = Math.floor(Math.random() * gamePlayers.length);
         randomPlayer = gamePlayers[randomIndex];
         console.log(randomPlayer);
+        console.log('other');
         return randomPlayer;
     }
     const dataIndex = indexes.find((user) => user.idPlayer === randomPlayer);
