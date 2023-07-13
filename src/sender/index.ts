@@ -1,5 +1,5 @@
 import { CustomWebSocket, IIndex, Request } from '../types';
-import { placeShip, registerPlayer, resetRoomUsers, addIndex, indexes, roomRegister, roomUsers } from '../data/index';
+import { placeShip, registerPlayer, resetRoomUsers, addIndex, indexes, roomRegister, roomUsers, firstPlayerMessage } from '../data/index';
 import {getValueByXY} from '../game/index';
 import { players } from '../data/index';
 import { wsclients } from '../../index';
@@ -100,15 +100,36 @@ export const createGame = (ws:CustomWebSocket, idGame:number, idPlayer: number) 
 
 
 
-export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
-
+export const addMatrix = (receivedMessage: Request) => {
   try {
     const { gameId, ships, indexPlayer } = JSON.parse(receivedMessage.data);
 
     const updatedIndexPlayer = indexes.find((data: IIndex) => data.idGame === gameId && data.idPlayer !== indexPlayer);
 
         if (updatedIndexPlayer) {
-            const updatedMessage: Request = {
+            // const updatedMessage: Request = {
+              placeShip(gameId, updatedIndexPlayer.idPlayer, ships);
+        } else {
+            console.error('Could not find updatedIndexPlayer');
+        }
+    } catch (error) {
+        console.error('Error occurred in startGame:', error);
+    }
+};
+
+
+export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
+    const { gameId, ships, indexPlayer } = JSON.parse(receivedMessage.data);
+    const filteredClients = wsclients.filter((client) => {
+        const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
+        return playerIndex !== undefined;
+    });
+    if (firstPlayerMessage.length === 0) {
+        firstPlayerMessage.push(receivedMessage);
+    } else {
+        const firstPlayerData = indexes.find((data) => data.idGame === gameId && data.index === ws.index);
+        if (firstPlayerData) {
+            const firstPlayerMessageToSend: Request = {
                 type: 'start_game',
                 data: JSON.stringify({
                     ships,
@@ -117,21 +138,37 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
                 id: 0,
             };
 
-            ws.send(JSON.stringify(updatedMessage));
-            placeShip(gameId, updatedIndexPlayer.idPlayer, ships);
-        } else {
-            console.error('Could not find updatedIndexPlayer');
+        //     ws.send(JSON.stringify(updatedMessage));
+        //     placeShip(gameId, updatedIndexPlayer.idPlayer, ships);
+        // } else {
+        //     console.error('Could not find updatedIndexPlayer');
+        ws.send(JSON.stringify(firstPlayerMessageToSend));
+        }
+        const secondPlayerData = indexes.find((data) => data.idGame === gameId && data.index !== ws.index);
+        if (secondPlayerData) {
+            const updatedMessage: Request = {
+                type: 'start_game',
+                data: JSON.stringify({
+                    ships: JSON.parse(firstPlayerMessage[0].data).ships,
+                    currentPlayerIndex: secondPlayerData.idPlayer,
+                }),
+                id: 0,
+            };
+            filteredClients.forEach((client) => {
+                client.send(JSON.stringify(updatedMessage));
+            });
         }
 
-} catch (error) {
-    console.error('Error occurred in startGame:', error);
+// } catch (error) {
+//     console.error('Error occurred in startGame:', error);
 }
 };
 
-export const userAttack = (ws: CustomWebSocket, receivedMessage: Request) => {
+export const userAttack = (receivedMessage: Request) => {
   const { gameId, x, y, indexPlayer } = JSON.parse(receivedMessage.data);
 
   const status = getValueByXY(gameId, indexPlayer, x, y);
+  // turnUser(receivedMessage, status);
   const filteredClients = wsclients.filter((client) => {
       const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
       return playerIndex !== undefined;
@@ -181,22 +218,50 @@ export const attackPlayer = (x: number, y: number, indexPlayer: number, status: 
           id: 0,
       };
       client.send(JSON.stringify(updatedMessage));
-      console.log(client.index);
+      // console.log(client.index);
   });};
 
 
 
-export const turnUser = (ws: CustomWebSocket, receivedMessage:Request) => {
-  const filteredClients = wsclients.filter((client) => indexes.some((user) => user.index === client.index));
-  const {indexPlayer } = JSON.parse(receivedMessage.data);
-  filteredClients.forEach((client) => {
-      const updatedMessage: Request = {
-          type: 'turn',
-          data: JSON.stringify({
-              currentPlayer: indexPlayer,
-          }),
-          id:0,
-      };
-      client.send(JSON.stringify(updatedMessage));
-      });
+  export const turnUser = (receivedMessage:Request, status = 'start') => {
+    const {indexPlayer } = JSON.parse(receivedMessage.data);
+    const data = indexes.find((user) => user.idPlayer === indexPlayer);
+    if (!data) {
+        return;
+    }
+    const gameId = data.idGame;
+    const indexesByGameId = indexes.filter((item) => item.idGame === gameId);
+    const gamePlayers = indexesByGameId.map((item) => item.idPlayer);
+    let randomPlayer:any;
+    if (status === 'miss' || status === 'killed'){
+        randomPlayer = indexPlayer;
+    } else {
+        const randomIndex = Math.floor(Math.random() * gamePlayers.length);
+        randomPlayer = gamePlayers[randomIndex];
+        console.log(randomPlayer);
+        return randomPlayer;
+    }
+    const dataIndex = indexes.find((user) => user.idPlayer === randomPlayer);
+    if (!dataIndex) {
+      return;
+    }
+    const randomPlayerIndex = dataIndex.index;
+
+
+    const filteredClients = wsclients.filter((client) => {
+        const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
+        return playerIndex !== undefined;
+    });
+    filteredClients.forEach((client) => {
+      if (client.index === randomPlayerIndex) {
+        const updatedMessage: Request = {
+            type: 'turn',
+            data: JSON.stringify({
+                currentPlayer: randomPlayer,
+            }),
+            id: 0,
+        };
+        client.send(JSON.stringify(updatedMessage));
+    }
+});
 };
