@@ -1,4 +1,4 @@
-import { CustomWebSocket, Request } from '../types';
+import { CustomWebSocket, IIndex, Request } from '../types';
 import { placeShip, registerPlayer, resetRoomUsers, addIndex, indexes, gameSession, roomRegister, roomUsers } from '../data/index';
 import { players } from '../data/index';
 import { wsclients } from '../../index';
@@ -19,8 +19,8 @@ const getPlayerNameByIndex = (index: string): string => {
   }
 };
 
-export const getValueByXY = (index: number, x: number, y: number): string | undefined => {
-  const data = gameSession.find((data) => data.indexPlayer === index);
+export const getValueByXY = (gameId: number, index: number, x: number, y: number): string | undefined => {
+  const data = gameSession.find((data) => data.gameId === gameId && data.indexPlayer === index);
   if (data) {
       const gameBoard = data.gameBoard;
       if (gameBoard[y] && gameBoard[y][x]) {
@@ -33,49 +33,104 @@ export const getValueByXY = (index: number, x: number, y: number): string | unde
                   case 'killed':
                       return 'killed';
                   case 'small':
-                      gameBoard[y][x]='killed';
-                      if (x + 1 < gameBoard[y].length) {
-                          attackPlayer(x + 1, y, index);
-                      }
-                      if (x - 1 >= 0) {
-                          attackPlayer(x - 1, y, index);
-                      }
-                      if (y + 1 < gameBoard.length) {
-                          attackPlayer(x, y + 1, index);
-                      }
-                      if (y - 1 >= 0) {
-                          attackPlayer(x, y - 1, index);
-                      }
-                      if (x + 1 < gameBoard[y].length && y + 1 < gameBoard.length) {
-                          attackPlayer(x + 1, y + 1, index);
-                      }
-                      if (x + 1 < gameBoard[y].length && y - 1 >= 0) {
-                          attackPlayer(x + 1, y - 1, index);
-                      }
-                      if (x - 1 >= 0 && y + 1 < gameBoard.length) {
-                          attackPlayer(x - 1, y + 1, index);
-                      }
-                      if (x - 1 >= 0 && y - 1 >= 0) {
-                          attackPlayer(x - 1, y - 1, index);
+
+                      // gameBoard[y][x]='killed';
+                      // if (x + 1 < gameBoard[y].length) {
+                      //     attackPlayer(x + 1, y, index);
+                      // }
+                      // if (x - 1 >= 0) {
+                      //     attackPlayer(x - 1, y, index);
+                      // }
+                      // if (y + 1 < gameBoard.length) {
+                      //     attackPlayer(x, y + 1, index);
+                      // }
+                      // if (y - 1 >= 0) {
+                      //     attackPlayer(x, y - 1, index);
+                      // }
+                      // if (x + 1 < gameBoard[y].length && y + 1 < gameBoard.length) {
+                      //     attackPlayer(x + 1, y + 1, index);
+                      // }
+                      // if (x + 1 < gameBoard[y].length && y - 1 >= 0) {
+                      //     attackPlayer(x + 1, y - 1, index);
+                      // }
+                      // if (x - 1 >= 0 && y + 1 < gameBoard.length) {
+                      //     attackPlayer(x - 1, y + 1, index);
+                      // }
+                      // if (x - 1 >= 0 && y - 1 >= 0) {
+                      //     attackPlayer(x - 1, y - 1, index);
+                      gameBoard[y][x] = 'killed';
+                        for (let i = -1; i <= 1; i++) {
+                            for (let j = -1; j <= 1; j++) {
+                                if (x + i >= 0 && x + i < gameBoard[y].length && y + j >= 0 && y + j < gameBoard.length) {
+                                    attackPlayer(x + i, y + j, index,'miss');
+                                }
+                            }
                       }
                       return 'killed';
                   case 'medium':
-                      if (
-                          (x + 1 < gameBoard[y].length && gameBoard[y][x + 1] === 'shot') ||
-                          (x - 1 >= 0 && gameBoard[y][x - 1] === 'shot')
-                      ){
+
+                      // if (
+                      //     (x + 1 < gameBoard[y].length && gameBoard[y][x + 1] === 'shot') ||
+                      //     (x - 1 >= 0 && gameBoard[y][x - 1] === 'shot')
+                      // ){
+                        if (x + 1 < gameBoard[y].length && gameBoard[y][x + 1] === 'shot') {
+                          gameBoard[y][x] = 'killed';
+                          for (let i = -1; i <= 1; i++) {
+                              for (let j = -1; j <= 1; j++) {
+                                  if (x + i >= 0 && x + i < gameBoard[y].length && y + j >= 0 && y + j < gameBoard.length) {
+                                      attackPlayer(x + i, y + j, index,'miss');
+                                  }
+                              }
+                          }
+                          attackPlayer(x + 1, y, index, 'killed');
                           return 'killed';
                       }
-                      if (
-                          y + 1 < gameBoard.length &&
-                          y - 1 >= 0 &&
-                          ((y + 1 < gameBoard.length && gameBoard[y + 1][x] === 'shot') || (y - 1 >= 0 && gameBoard[y - 1][x] === 'shot'))
-                      ) {
+                      if (x - 1 >= 0 && gameBoard[y][x - 1] === 'shot') {
+                          gameBoard[y][x] = 'killed';
+                          attackPlayer(x - 1, y, index, 'killed');
+                          for (let i = -1; i <= 1; i++) {
+                              for (let j = -1; j <= 1; j++) {
+                                  if (x + i >= 0 && x + i < gameBoard[y].length && y + j >= 0 && y + j < gameBoard.length) {
+                                      attackPlayer(x + i, y + j, index,'miss');
+                                  }
+                              }
+                          }
+                          return 'killed';
+                      }
+                      if (y + 1 < gameBoard.length && gameBoard[y + 1][x] === 'shot') {
+                          gameBoard[y][x] = 'killed';
+                          attackPlayer(x, y + 1, index, 'killed');
+                          for (let i = -1; i <= 1; i++) {
+                              for (let j = -1; j <= 1; j++) {
+                                  if (x + i >= 0 && x + i < gameBoard[y].length && y + j >= 0 && y + j < gameBoard.length) {
+                                      attackPlayer(x + i, y + j, index,'miss');
+                                  }
+                              }
+                          }
+                          return 'killed';
+                      }
+
+                      // if (
+                      //     y + 1 < gameBoard.length &&
+                      //     y - 1 >= 0 &&
+                      //     ((y + 1 < gameBoard.length && gameBoard[y + 1][x] === 'shot') || (y - 1 >= 0 && gameBoard[y - 1][x] === 'shot'))
+                      // ) {
+                        if (y - 1 >= 0 && gameBoard[y - 1][x] === 'shot') {
+                          gameBoard[y][x] = 'killed';
+                          attackPlayer(x, y - 1, index, 'killed');
+                          for (let i = -1; i <= 1; i++) {
+                              for (let j = -1; j <= 1; j++) {
+                                  if (x + i >= 0 && x + i < gameBoard[y].length && y + j >= 0 && y + j < gameBoard.length) {
+                                      attackPlayer(x + i, y + j, index,'miss');
+                                  }
+                              }
+                          }
                           return 'killed';
                       }
 
                       console.log(gameBoard[y][x]);
                       break;
+
                   case 'large':
                       console.log(gameBoard[y][x]);
                       break;
@@ -129,12 +184,12 @@ export const userRegistration = (receivedMessage: Request, ws:CustomWebSocket) =
     }
 };
 
-export const updateRoom = (ws:CustomWebSocket) => {
+export const updateRoom = (ws:CustomWebSocket, roomId: number) => {
   if (roomUsers.length === 0) {
       const name = getPlayerNameByIndex(ws.index);
       roomRegister(name, ws.index);
       const rooms = JSON.stringify([{
-          roomId: ws.index,
+          roomId: roomId,
           roomUsers: roomUsers,
       }]);
 

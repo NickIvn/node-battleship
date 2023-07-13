@@ -22,7 +22,8 @@ export interface IRoomUsers {
 }
 
 export interface IIndex {
-  playerId: number;
+  idGame: number;
+  idPlayer: number;
   index: string;
 }
 

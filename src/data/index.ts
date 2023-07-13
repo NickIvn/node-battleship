@@ -34,8 +34,8 @@ export function playerExists(name: string): boolean {
     return newPlayer;
   };
 
-  export const addIndex = (playerId: number, index: string): IIndex => {
-    const newPlayer: IIndex = { playerId, index };
+  export const addIndex = (idGame:number, idPlayer: number, index: string): IIndex => {
+    const newPlayer: IIndex = { idGame, idPlayer, index };
     indexes.push(newPlayer);
     return newPlayer;
   };
