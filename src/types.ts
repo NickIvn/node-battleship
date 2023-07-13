@@ -9,3 +9,13 @@ export interface Request {
   export interface CustomWebSocket extends WebSocket {
     index: string;
 }
+
+export interface Ship {
+  position: {
+    x: number;
+    y: number;
+  };
+  direction: boolean;
+  type: string;
+  length: number;
+}
