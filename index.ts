@@ -1,12 +1,12 @@
 import { httpServer } from './src/http_server/index';
 import { WebSocketServer } from 'ws';
 import {v4 as uuid} from 'uuid';
-import { CustomWebSocket, Request } from './src/types';
+import { CustomWebSocket, Request, INextPlayer } from './src/types';
 import { userRegistration, updateRoom, createGame, startGame, userAttack, addMatrix } from './src/sender/index';
 
 const HTTP_PORT = 8181;
 export const wsclients:CustomWebSocket[] = [];
-export const nextPlayer:string[] = [];
+export const nextPlayer:INextPlayer[] = [];
 let idGame = 0;
 let roomId = 0;
 

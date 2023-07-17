@@ -48,3 +48,13 @@ export interface IKilled {
   idPlayer: string;
   ships: string[];
 }
+
+export interface INextPlayer {
+  idGame: number;
+  lastSteps: string[];
+}
+
+export interface Winner {
+  name:  string;
+  wins: number;
+}

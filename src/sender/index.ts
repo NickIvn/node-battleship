@@ -1,5 +1,5 @@
-import { CustomWebSocket, IIndex, Request, IKilled } from '../types';
-import { placeShip, registerPlayer, addIndex, checkAttack, indexes, roomUsers, firstPlayerMessage, resetFirstPlayer, killedList } from '../data/index';
+import { CustomWebSocket, IIndex, Request, IKilled, INextPlayer } from '../types';
+import { placeShip, registerPlayer, addIndex, addLastToList, checkAttack, indexes, roomUsers, firstPlayerMessage, resetFirstPlayer, killedList, updatePlayerWins  } from '../data/index';
 import {getValueByXY} from '../game/index';
 import { players } from '../data/index';
 import { wsclients, nextPlayer } from '../../index';
@@ -50,6 +50,8 @@ export const userRegistration = (receivedMessage: Request, ws:CustomWebSocket) =
         ws.send(JSON.stringify(updatedMessage));
         registerPlayer(name, password, ws.index);
         console.log(`Client ${ws.index} register: player name - ${name}`);
+        updateRooms();
+        updateWinners();
     }
 };
 
@@ -80,6 +82,37 @@ export const updateRoom = (ws: CustomWebSocket, roomId: number) => {
   };
   sendToAllClients(updatedMessage, wsclients);
   console.log(`Create room N${roomId}`);
+  updateRooms();
+};
+
+export const updateRooms = () => {
+  const creator = roomUsers.filter((room) => room.roomUsers.length === 1);
+
+  const update = JSON.stringify(creator);
+
+  const response = {
+      type: 'update_room',
+      data: update,
+      id: 0,
+  };
+
+  sendToAllClients(response, wsclients);
+};
+
+export const updateWinners = () => {
+  const transformedPlayers = players.map((player) => {
+      return {
+        name: player.name,
+        wins: player.wins,
+      };
+    });
+  if (transformedPlayers.length === 0) return;
+  const response = {
+      type: 'update_winners',
+      data: JSON.stringify(transformedPlayers),
+      id: 0,
+    };
+    sendToAllClients(response, wsclients);
 };
 
 export const createGame = (ws: CustomWebSocket, idGame: number, receivedMessage: Request) => {
@@ -103,6 +136,7 @@ export const createGame = (ws: CustomWebSocket, idGame: number, receivedMessage:
               
               const roomPlayerIndexes = roomUsers[roomIndex].roomUsers.map((user) => user.index);
               roomUsers.splice(roomIndex, 1);
+              updateRooms();
               // console.log(roomUsers);
               
               const filteredClients = wsclients.filter((client) => roomPlayerIndexes.includes(client.index));
@@ -137,6 +171,9 @@ export const addMatrix = (receivedMessage: Request) => {
       if (updatedIndexPlayer) {
         const player: IKilled = {idPlayer: updatedIndexPlayer.idPlayer, ships:[]};
         killedList.push(player);
+        const lastStep: INextPlayer = {idGame: gameId, lastSteps:[]};
+            nextPlayer.push(lastStep);
+            killedList.push(player);
           placeShip(gameId, updatedIndexPlayer.idPlayer, ships);
           checkAttack(gameId, updatedIndexPlayer.idPlayer, ships);
       } else {
@@ -185,29 +222,16 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
 export const userAttack = (receivedMessage: Request) => {
   const { gameId, x, y, indexPlayer } = JSON.parse(receivedMessage.data);
 
-  // const status = getValueByXY(gameId, indexPlayer, x, y);
-  // turnUser(receivedMessage, status);
-  // const filteredClients = wsclients.filter((client) => {
-  //     const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
-  //     return playerIndex !== undefined;
-  // });
-  // filteredClients.forEach((client) => {
-  //     const updatedMessage: Request = {
-  //         type: 'attack',
-  //         data: JSON.stringify({
-  //             position: {
-  //                 x: x,
-  //                 y: y,
-  //             },
-  //             currentPlayer: indexPlayer,
-  //             status: status,
-  //         }),
-  //         id: 0,
-  //     };
-  //     client.send(JSON.stringify(updatedMessage));
-  // });
-  const lastStep = nextPlayer.slice(-1)[0];
-    if (indexPlayer===lastStep) {
+      const checkLastStep = (idGame: number) => {
+        const player = nextPlayer.find((player) => player.idGame === idGame);
+        if (player && player.lastSteps.length > 0) {
+          const lastStep = player.lastSteps[player.lastSteps.length - 1];
+          return lastStep;
+        } else {
+          console.log(`No last step found for game ${idGame}`);
+        }
+      };
+    if (indexPlayer===checkLastStep(gameId)) {
         const status = getValueByXY(gameId, indexPlayer, x, y, 'attack');
         turnUser(receivedMessage, status);
         const filteredClients = wsclients.filter((client) => {
@@ -229,9 +253,39 @@ export const userAttack = (receivedMessage: Request) => {
             };
             client.send(JSON.stringify(updatedMessage));
         });
-        if (killedList.length===10){
-          console.log('Game Over');
+        const player = killedList.find((player) => player.idPlayer === indexPlayer);
+
+          if (player) {
+            if (player.ships.length === 10) {
+            console.log('Game Over');
+            filteredClients.forEach((client) => {
+              const updatedMessage: Request = {
+                  type: 'finish',
+                  data: JSON.stringify({
+                      winPlayer: indexPlayer,
+                  }),
+                  id: 0,
+              };
+              client.send(JSON.stringify(updatedMessage));
+          });
+          const name = getPlayerNameByIndex(indexPlayer);  
+          updatePlayerWins(name, players);
+          const transformedPlayers = players.map((player) => {
+              return {
+                name: player.name,
+                wins: player.wins,
+              };
+            });
+          filteredClients.forEach((client) => {
+              const updatedMessage: Request = {
+                  type: 'update_winners',
+                  data: JSON.stringify(transformedPlayers),
+                  id: 0,
+              };
+              client.send(JSON.stringify(updatedMessage));
+          });
         }
+      } 
     }
 };
 
@@ -291,6 +345,6 @@ export const turnUser = (receivedMessage:Request, status: string|undefined) => {
           console.log(client.index);
           client.send(JSON.stringify(updatedMessage));
    });
-   nextPlayer.push(currentPlayer);
+   addLastToList(gameId, currentPlayer);
   return currentPlayer;
 };
