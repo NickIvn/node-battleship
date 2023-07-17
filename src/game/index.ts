@@ -1,4 +1,4 @@
-import { gameSession, checkSession } from '../data/index';
+import { gameSession, checkSession, addShipToPlayer } from '../data/index';
 import { attackPlayer } from '../sender/index';
 import { Ship } from '../types';
 
@@ -28,6 +28,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                     case 'small':
                         gameBoard[y][x] = 'killed';
                         attackNeighboringCells(x, y, gameBoard, index);
+                        addShipToPlayer(index, 'small');
                         return 'killed';
                     case 'medium':
                         if (x + 1 < gameBoard[y].length && gameBoard[y][x + 1] === 'shot') {
@@ -37,6 +38,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackNeighboringCells(x+1, y, gameBoard, index);
                             attackPlayer(x + 1, y, index, 'killed');
                             attackPlayer(x, y, index, 'killed');
+                            addShipToPlayer(index, 'medium');
                             return 'killed';
                         }
                         if (x - 1 >= 0 && gameBoard[y][x - 1] === 'shot') {
@@ -46,6 +48,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackNeighboringCells(x-1, y, gameBoard, index);
                             attackPlayer(x - 1, y, index, 'killed');
                             attackPlayer(x, y, index, 'killed');
+                            addShipToPlayer(index, 'medium');
                             return 'killed';
                         }
                         if (y + 1 < gameBoard.length && gameBoard[y + 1][x] === 'shot') {
@@ -55,6 +58,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackNeighboringCells(x, y+1, gameBoard, index);
                             attackPlayer(x, y + 1, index, 'killed');
                             attackPlayer(x, y, index, 'killed');
+                            addShipToPlayer(index, 'medium');
                             return 'killed';
                         }
                         if (y - 1 >= 0 && gameBoard[y - 1][x] === 'shot') {
@@ -64,6 +68,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackNeighboringCells(x, y-1, gameBoard, index);
                             attackPlayer(x, y - 1, index, 'killed');
                             attackPlayer(x, y, index, 'killed');
+                            addShipToPlayer(index, 'medium');
                             return 'killed';
                         }              
                         break;                            
@@ -78,6 +83,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y, index, 'killed');
                             attackPlayer(x+1, y, index, 'killed');
                             attackPlayer(x+2, y, index, 'killed');
+                            addShipToPlayer(index, 'large');
                             return 'killed';
                         }
                         else if (x - 2 >= 0 && gameBoard[y][x - 1] === 'shot' && gameBoard[y][x - 2] === 'shot') {
@@ -90,6 +96,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y, index, 'killed');
                             attackPlayer(x-1, y, index, 'killed');
                             attackPlayer(x-2, y, index, 'killed');
+                            addShipToPlayer(index, 'large');
                             return 'killed';
                         }
                         else if (x + 1 < gameBoard[y].length && x - 1 >= 0 && gameBoard[y][x + 1] === 'shot' && gameBoard[y][x - 1] === 'shot') {
@@ -102,6 +109,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y, index, 'killed');
                             attackPlayer(x+1, y, index, 'killed');
                             attackPlayer(x-1, y, index, 'killed');
+                            addShipToPlayer(index, 'large');
                             return 'killed';
                         }
                         else if (y + 2 < gameBoard.length && gameBoard[y + 1][x] === 'shot' && gameBoard[y + 2][x] === 'shot') {
@@ -114,6 +122,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y, index, 'killed');
                             attackPlayer(x, y+2, index, 'killed');
                             attackPlayer(x, y+1, index, 'killed');
+                            addShipToPlayer(index, 'large');
                             return 'killed';
                         }
                         else if (y - 2 >= 0 && gameBoard[y - 1][x] === 'shot' && gameBoard[y - 2][x] === 'shot') {
@@ -126,6 +135,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y, index, 'killed');
                             attackPlayer(x, y-2, index, 'killed');
                             attackPlayer(x, y-1, index, 'killed');
+                            addShipToPlayer(index, 'large');
                             return 'killed';
                         }
                         else if (y + 1 < gameBoard.length && y - 1 >= 0 && gameBoard[y - 1][x] === 'shot' && gameBoard[y + 1][x] === 'shot') {
@@ -138,6 +148,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y, index, 'killed');
                             attackPlayer(x, y+1, index, 'killed');
                             attackPlayer(x, y-1, index, 'killed');
+                            addShipToPlayer(index, 'large');
                             return 'killed';
                         }
                         break;
@@ -160,6 +171,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x + 1, y, index, 'killed');
                             attackPlayer(x + 2, y, index, 'killed');
                             attackPlayer(x + 3, y, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                           } else if (
                             x - 3 >= 0 &&
@@ -179,6 +191,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x - 1, y, index, 'killed');
                             attackPlayer(x - 2, y, index, 'killed');
                             attackPlayer(x - 3, y, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                           } else if (
                             x + 2 < gameBoard[y].length &&
@@ -199,6 +212,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x + 1, y, index, 'killed');
                             attackPlayer(x + 2, y, index, 'killed');
                             attackPlayer(x - 1, y, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                         } else if (
                             x + 2 < gameBoard[y].length &&
@@ -219,6 +233,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x + 1, y, index, 'killed');
                             attackPlayer(x - 2, y, index, 'killed');
                             attackPlayer(x - 1, y, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                           } else if (
                             y + 3 < gameBoard.length &&
@@ -238,6 +253,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y + 1, index, 'killed');
                             attackPlayer(x, y + 2, index, 'killed');
                             attackPlayer(x, y + 3, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                           } else if (
                             y - 3 >= 0 &&
@@ -257,6 +273,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y - 1, index, 'killed');
                             attackPlayer(x, y - 2, index, 'killed');
                             attackPlayer(x, y - 3, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                           } else if (
                             y + 2 < gameBoard.length &&
@@ -277,6 +294,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y + 1, index, 'killed');
                             attackPlayer(x, y + 2, index, 'killed');
                             attackPlayer(x, y - 1, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                           } else if (
                             y + 2 < gameBoard.length &&
@@ -297,6 +315,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             attackPlayer(x, y + 1, index, 'killed');
                             attackPlayer(x, y - 2, index, 'killed');
                             attackPlayer(x, y - 1, index, 'killed');
+                            addShipToPlayer(index, 'huge');
                             return 'killed';
                           }          
                         break;
