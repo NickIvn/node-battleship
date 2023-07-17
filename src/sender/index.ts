@@ -60,7 +60,6 @@ export const updateRoom = (ws: CustomWebSocket, roomId: number) => {
   if (existingRoomIndex !== -1) {
     roomUsers.splice(existingRoomIndex, 1);
     console.log(`Room with user index ${ws.index} already exists. Deleting the room.`);
-    // console.log(roomUsers);
   }
 
   const rooms = {
@@ -81,21 +80,15 @@ export const updateRoom = (ws: CustomWebSocket, roomId: number) => {
   };
   sendToAllClients(updatedMessage, wsclients);
   console.log(`Create room N${roomId}`);
-  // console.log(roomUsers);
 };
 
 export const createGame = (ws: CustomWebSocket, idGame: number, receivedMessage: Request) => {
   const { indexRoom } = JSON.parse(receivedMessage.data);    
-  // Поиск комнаты по roomId
   const roomIndex = roomUsers.findIndex((room) => room.roomId === indexRoom);
   
-  // Если комната существует, добавить игрока в комнату
   if (roomIndex !== -1) {
       const name = getPlayerNameByIndex(ws.index);
-      // const creatorIndex = roomUsers[roomIndex].roomUsers[0].index;
-      // Индекс создателя комнаты
     
-    // Проверка, что игрок не является создателем комнаты
     const creatorIndex = roomUsers[roomIndex].roomUsers[0].index; 
       if (ws.index !== creatorIndex) {
           const player = {
@@ -103,18 +96,15 @@ export const createGame = (ws: CustomWebSocket, idGame: number, receivedMessage:
           index: ws.index,
       };
       
-      // Проверка на максимальное количество игроков в комнате (не более 2 игроков)
           if (roomUsers[roomIndex].roomUsers.length < 2) {
               roomUsers[roomIndex].roomUsers.push(player);
               console.log(roomUsers);
               console.log(`Player ${name} added to room ${indexRoom}`);
               
-              // Извлечение всех индексов игроков комнаты из wsclients
               const roomPlayerIndexes = roomUsers[roomIndex].roomUsers.map((user) => user.index);
               roomUsers.splice(roomIndex, 1);
               console.log(roomUsers);
               
-              // Фильтрация wsclients, чтобы оставить только клиентов с индексами игроков комнаты
               const filteredClients = wsclients.filter((client) => roomPlayerIndexes.includes(client.index));
               filteredClients.forEach((client) => {
                       addIndex(idGame, client.index, client.index); 
@@ -160,11 +150,7 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
   const status = 'miss';
   if (firstPlayerMessage.length === 0) {
       firstPlayerMessage.push(receivedMessage);
-      // console.log(ws.index);
-      // console.log(firstPlayerMessage);
-      // console.log(JSON.parse(firstPlayerMessage[0].data).indexPlayer);
   } else {
-      // console.log(ws.index);
       const filteredClient = wsclients.find((client) => client.index === JSON.parse(firstPlayerMessage[0].data).indexPlayer);
       if (filteredClient) {
           const updatedMessage: Request = {
@@ -175,7 +161,6 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
               }),
               id: 0,
           };
-          // console.log(filteredClient.index);
           filteredClient.send(JSON.stringify(updatedMessage));
           const firstPlayerMessageToSend: Request = {
               type: 'start_game',
@@ -187,8 +172,6 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
           };
           ws.send(JSON.stringify(firstPlayerMessageToSend));
           turnUser(receivedMessage, status);
-          // console.log(firstPlayerMessageToSend);
-          // console.log(indexPlayer);
           resetFirstPlayer();
         } else {
           console.log('Client has not found');
@@ -247,7 +230,8 @@ export const attackPlayer = (x: number, y: number, indexPlayer: string, status: 
           id: 0,
       };
       client.send(JSON.stringify(updatedMessage));
-  });};
+    });
+};
 
 
 
@@ -258,26 +242,6 @@ export const turnUser = (receivedMessage:Request, status: string|undefined) => {
       return;
   }
   const gameId = data.idGame;
-
-  // const indexesByGameId = indexes.filter((item) => item.idGame === gameId);
-  // const gamePlayers = indexesByGameId.map((item) => item.idPlayer);
-  // let randomPlayer:any;
-  // if (status === 'miss' || status === 'killed'){
-  //     randomPlayer = indexPlayer;
-  //     console.log(status);
-  // } else {
-  //     const randomIndex = Math.floor(Math.random() * gamePlayers.length);
-  //     randomPlayer = gamePlayers[randomIndex];
-  //     console.log(randomPlayer);
-  //     console.log('other');
-  //     return randomPlayer;
-  // }
-  // const dataIndex = indexes.find((user) => user.idPlayer === randomPlayer);
-  // if (!dataIndex) {
-  //   return;
-  // }
-  // const randomPlayerIndex = dataIndex.index;
-  
   const anotherPlayer = indexes.find((user) => user.idGame === gameId && user.index !== indexPlayer);
   const filteredClients = wsclients.filter((client) => {
       const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
@@ -287,7 +251,6 @@ export const turnUser = (receivedMessage:Request, status: string|undefined) => {
   const currentPlayer = (status === 'miss' || status === 'killed') ? (anotherPlayer?.idPlayer || '') : data.idPlayer;
 
   filteredClients.forEach((client) => {
-      // if (client.index === randomPlayerIndex) {
           const updatedMessage: Request = {
               type: 'turn',
               data: JSON.stringify({
@@ -297,5 +260,6 @@ export const turnUser = (receivedMessage:Request, status: string|undefined) => {
           };
           console.log(client.index);
           client.send(JSON.stringify(updatedMessage));
-  });
+   });
+  return currentPlayer;
 };
