@@ -164,6 +164,64 @@ export const placeShip = (gameId:number, indexPlayer:string, ships:Ship[]) => {
     
         if (player) {
           player.wins++;
-          console.log(player);
         }
+      };
+
+      export function removeKilledDataByIdPlayer(idPlayer: string): void {
+        const index = killedList.findIndex((killed) => killed.idPlayer === idPlayer);
+    
+        if (index !== -1) {
+          killedList.splice(index, 1);
+        }
+      }
+    
+      export function removeGameSessionByGameId(gameId: number): void {
+        gameSession.forEach((session, index) => {
+          if (session.gameId === gameId) {
+            gameSession.splice(index, 1);
+          }
+        });
+      }
+    
+      export function removeIndexByGameId(idGame: number): void {
+        indexes.forEach((index, indexToRemove) => {
+          if (index.idGame === idGame) {
+            indexes.splice(indexToRemove, 1);
+          }
+        });
+      }
+    
+      export const removeDuplicatePlayers = () => {
+        const uniquePlayers: IKilled[] = [];
+        const playerIds: Set<string> = new Set();
+    
+        killedList.forEach((player) => {
+          if (!playerIds.has(player.idPlayer)) {
+            playerIds.add(player.idPlayer);
+            uniquePlayers.push(player);
+          }
+        });
+    
+        killedList.length = 0;
+        killedList.push(...uniquePlayers);
+      };
+    
+      export const removeDuplicatePlayersById = () => {
+        const uniquePlayers: INextPlayer[] = [];
+        const playerIds: Set<number> = new Set();
+    
+        nextPlayer.forEach((player) => {
+          if (!playerIds.has(player.idGame)) {
+            playerIds.add(player.idGame);
+            uniquePlayers.push(player);
+          } else {
+            const existingPlayer = uniquePlayers.find((p) => p.idGame === player.idGame);
+            if (existingPlayer && existingPlayer.lastSteps.length === 0) {
+              existingPlayer.lastSteps = player.lastSteps;
+            }
+          }
+        });
+    
+        nextPlayer.length = 0;
+        nextPlayer.push(...uniquePlayers);
       };

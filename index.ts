@@ -2,11 +2,19 @@ import { httpServer } from './src/http_server/index';
 import { WebSocketServer } from 'ws';
 import {v4 as uuid} from 'uuid';
 import { CustomWebSocket, Request, INextPlayer } from './src/types';
-import { userRegistration, updateRoom, createGame, startGame, userAttack, addMatrix, randomAttack, playWithBot, finishGame } from './src/sender/index';
+import { userRegistration, updateRoom, createGame, finishGame } from './src/sender/index';
+import { startGame, userAttack, addMatrix, randomAttack } from './src/sender/game';
 
 const HTTP_PORT = 8181;
 export const wsclients:CustomWebSocket[] = [];
 export const nextPlayer:INextPlayer[] = [];
+export const removePlayerById = (idGame: number) => {
+  const index = nextPlayer.findIndex((player) => player.idGame === idGame);
+  if (index !== -1) {
+    nextPlayer.splice(index, 1);
+  }
+};
+
 let idGame = 0;
 let roomId = 0;
 
@@ -49,9 +57,9 @@ wss.on('connection', (ws:CustomWebSocket)=>{
         case 'randomAttack':
           randomAttack(receivedMessage);
           break;
-        case 'single_play':
-          playWithBot(receivedMessage, ws);
-          break;
+        // case 'single_play':
+        //   playWithBot(receivedMessage, ws);
+        //   break;
         case 'disconnect':
           finishGame(ws);
           break;

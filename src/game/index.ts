@@ -1,5 +1,5 @@
 import { gameSession, checkSession, addShipToPlayer } from '../data/index';
-import { attackPlayer } from '../sender/index';
+import { attackPlayer } from '../sender/main/index';
 import { Ship } from '../types';
 
 function attackNeighboringCells(x: number, y: number, gameBoard: Ship[], index: string) {
@@ -297,7 +297,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             addShipToPlayer(index, 'huge');
                             return 'killed';
                           } else if (
-                            y + 2 < gameBoard.length &&
+                            y - 2 < gameBoard.length &&
                             y - 1 >= 0 &&
                             gameBoard[y + 1][x] === 'shot' &&
                             gameBoard[y - 2][x] === 'shot' &&
