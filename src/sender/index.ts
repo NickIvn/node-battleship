@@ -42,22 +42,6 @@ export const userRegistration = (receivedMessage: Request, ws:CustomWebSocket) =
 
       ws.send(JSON.stringify(updatedMessage));
     } else {
-
-        // const updatedMessage : Request = {
-        //     type: 'reg',
-        //     data: JSON.stringify({
-        //         name,
-        //         index: ws.index,
-        //         error: false,
-        //         errorText: '',
-        //     }),
-        //     id: 0,
-        // };
-        // ws.send(JSON.stringify(updatedMessage));
-        // registerPlayer(name, password, ws.index);
-        // console.log(`Client ${ws.index} register: player name - ${name}`);
-        // updateRooms();
-        // updateWinners();
         if (!hasWhitespace(name)){
           if (!hasWhitespace(password)){
               const updatedMessage : Request = {

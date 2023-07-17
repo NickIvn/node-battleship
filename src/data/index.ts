@@ -1,3 +1,4 @@
+import { nextPlayer } from '../..';
 import { Ship, IGameSession, IIndex, IRoomUsers, Request, IKilled, INextPlayer } from '../types';
 
 class Player {
@@ -147,7 +148,7 @@ export const placeShip = (gameId:number, indexPlayer:string, ships:Ship[]) => {
         }
       };
 
-      
+
       export const addLastToList = (idGame: number, lastStep: string) => {
         const player = nextPlayer.find((player) => player.idGame === idGame);
         if (player) {
