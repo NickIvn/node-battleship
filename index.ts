@@ -6,12 +6,9 @@ import { userRegistration, updateRoom, createGame, startGame, userAttack, addMat
 
 const HTTP_PORT = 8181;
 export const wsclients:CustomWebSocket[] = [];
-
-// export const roomUsers = [];
-
+export const nextPlayer:string[] = [];
 let idGame = 0;
 let roomId = 0;
-// let idPlayer = 0;
 
 console.log(`Start static http server on the ${HTTP_PORT} port!`);
 httpServer.listen(HTTP_PORT);

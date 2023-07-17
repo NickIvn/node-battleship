@@ -19,6 +19,8 @@ export const players: Player[] = [];
 
 export const gameSession: IGameSession[] = [];
 
+export const checkSession: IGameSession[] = [];
+
 export const roomUsers: IRoomUsers[] = [];
 
 export const indexes:IIndex[] = [];
@@ -101,3 +103,33 @@ export const placeShip = (gameId:number, indexPlayer:string, ships:Ship[]) => {
       };
       gameSession.push(gameDataStorage);
     };
+
+    export const checkAttack = (gameId:number,indexPlayer:string,ships:Ship[]) => {
+      const gridSize = 10;
+      const gameBoard = new Array(gridSize);
+    
+      for (let i = 0; i < gridSize; i++) {
+          gameBoard[i] = new Array(gridSize).fill('empty');
+      }
+    
+      ships.forEach((ship: Ship) => {
+          const { position, direction, type, length } = ship;
+          const { x, y } = position;
+    
+          if (direction) {
+          for (let i = y; i < y + length; i++) {
+              gameBoard[i][x] = type;
+              }
+          } else {
+          for (let i = x; i < x + length; i++) {
+              gameBoard[y][i] = type;
+              }
+          }
+      });
+      const gameDataStorage = {
+          gameId,
+          indexPlayer,
+          gameBoard,
+        };
+        checkSession.push(gameDataStorage);
+      };

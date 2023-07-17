@@ -1,4 +1,4 @@
-import { gameSession } from '../data/index';
+import { gameSession, checkSession } from '../data/index';
 import { attackPlayer } from '../sender/index';
 import { Ship } from '../types';
 
@@ -12,8 +12,8 @@ function attackNeighboringCells(x: number, y: number, gameBoard: Ship[], index: 
     }
 }
 
-export const getValueByXY = (gameId: number, index: string, x: number, y: number): string | undefined => {
-    const data = gameSession.find((data) => data.gameId === gameId && data.indexPlayer === index);
+export const getValueByXY = (gameId: number, index: string, x: number, y: number, mode: string): string | undefined => {
+    const data= (mode === 'cheack') ? (checkSession.find((data) => data.gameId === gameId && data.indexPlayer === index)): gameSession.find((data) => data.gameId === gameId && data.indexPlayer === index);
     if (data) {
         const gameBoard = data.gameBoard;
         if (gameBoard[y] && gameBoard[y][x]) {
