@@ -3,7 +3,7 @@ import { killedList, players, removeDuplicatePlayers, updatePlayerWins } from '.
 import { getValueByXY } from '../../game';
 import { Request } from '../../types';
 import { filterClientsByIndex, getPlayerNameByIndex } from '../../utils';
-import { turnUser } from './WhoMove';
+import { turnUser } from './turnUser';
 
 export const randomAttack = (receivedMessage: Request) => {
     const { gameId, indexPlayer } = JSON.parse(receivedMessage.data);

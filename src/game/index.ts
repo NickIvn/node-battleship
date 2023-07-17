@@ -1,5 +1,5 @@
 import { gameSession, checkSession, addShipToPlayer } from '../data/index';
-import { attackPlayer } from '../sender/main/index';
+import { attackPlayer } from '../sender/game/index';
 import { Ship } from '../types';
 
 function attackNeighboringCells(x: number, y: number, gameBoard: Ship[], index: string) {
@@ -13,7 +13,7 @@ function attackNeighboringCells(x: number, y: number, gameBoard: Ship[], index: 
 }
 
 export const getValueByXY = (gameId: number, index: string, x: number, y: number, mode: string): string | undefined => {
-    const data = (mode === 'check') ? (checkSession.find((data) => data.gameId === gameId && data.indexPlayer === index)): gameSession.find((data) => data.gameId === gameId && data.indexPlayer === index);
+    const data = (mode === 'check') ? (checkSession.find((data) => data.gameId === gameId && data.indexPlayer === index)) : gameSession.find((data) => data.gameId === gameId && data.indexPlayer === index);
     if (data) {
         const gameBoard = data.gameBoard;
         if (gameBoard[y] && gameBoard[y][x]) {
@@ -284,7 +284,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                           ) {
                             gameBoard[y][x] = 'killed';
                             gameBoard[y + 1][x] = 'killed';
-                            gameBoard[y - 2][x] = 'killed';
+                            gameBoard[y + 2][x] = 'killed';
                             gameBoard[y - 1][x] = 'killed';
                             attackNeighboringCells(x, y, gameBoard, index);
                             attackNeighboringCells(x, y - 1, gameBoard, index);
@@ -300,6 +300,7 @@ export const getValueByXY = (gameId: number, index: string, x: number, y: number
                             y - 2 < gameBoard.length &&
                             y - 1 >= 0 &&
                             gameBoard[y + 1][x] === 'shot' &&
+                            Array.isArray(gameBoard[y - 2]) &&
                             gameBoard[y - 2][x] === 'shot' &&
                             gameBoard[y - 1][x] === 'shot'
                           ) {

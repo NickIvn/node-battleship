@@ -1,7 +1,8 @@
-import { turnUser } from '../main';
+import { turnUser } from './turnUser';
 import { wsclients } from '../../..';
 import { firstPlayerMessage, resetFirstPlayer } from '../../data';
 import { CustomWebSocket, Request } from '../../types';
+
 export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
     const { ships, indexPlayer } = JSON.parse(receivedMessage.data);
     const status = 'miss';

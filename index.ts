@@ -57,9 +57,6 @@ wss.on('connection', (ws:CustomWebSocket)=>{
         case 'randomAttack':
           randomAttack(receivedMessage);
           break;
-        // case 'single_play':
-        //   playWithBot(receivedMessage, ws);
-        //   break;
         case 'disconnect':
           finishGame(ws);
           break;

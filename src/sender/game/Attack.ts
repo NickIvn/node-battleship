@@ -1,4 +1,4 @@
-import { turnUser } from '../main';
+import { turnUser } from './turnUser';
 import { nextPlayer, removePlayerById } from '../../..';
 import { killedList, players, removeDuplicatePlayers, removeGameSessionByGameId, removeIndexByGameId, removeKilledDataByIdPlayer, updatePlayerWins } from '../../data';
 import { getValueByXY } from '../../game';

@@ -12,7 +12,7 @@ export const turnUser = (receivedMessage: Request, status: string|undefined) => 
 
     const anotherPlayer = indexes.find((user) => user.idGame === gameId && user.index !== indexPlayer);
     const filteredClients = filterClientsByIndex(gameId);
-    const currentPlayer = (status === 'miss' || status === 'killed') ? (anotherPlayer?.idPlayer || '') : data.idPlayer;
+    const currentPlayer = (status === 'miss') ? (anotherPlayer?.idPlayer || '') : data.idPlayer;
     filteredClients.forEach((client) => {
             const updatedMessage: Request = {
                 type: 'turn',
