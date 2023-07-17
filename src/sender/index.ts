@@ -20,6 +20,11 @@ const getPlayerNameByIndex = (index: string): string => {
   }
 };
 
+function hasWhitespace(str: string): boolean {
+  return /\s/.test(str);
+}
+
+
 export const userRegistration = (receivedMessage: Request, ws:CustomWebSocket) => {
   const {name, password} = JSON.parse(receivedMessage.data);
   const existingPlayer = players.find((player) => player.name === name);
@@ -37,21 +42,70 @@ export const userRegistration = (receivedMessage: Request, ws:CustomWebSocket) =
 
       ws.send(JSON.stringify(updatedMessage));
     } else {
-        const updatedMessage : Request = {
-            type: 'reg',
-            data: JSON.stringify({
-                name,
-                index: ws.index,
-                error: false,
-                errorText: '',
-            }),
-            id: 0,
-        };
-        ws.send(JSON.stringify(updatedMessage));
-        registerPlayer(name, password, ws.index);
-        console.log(`Client ${ws.index} register: player name - ${name}`);
-        updateRooms();
-        updateWinners();
+
+        // const updatedMessage : Request = {
+        //     type: 'reg',
+        //     data: JSON.stringify({
+        //         name,
+        //         index: ws.index,
+        //         error: false,
+        //         errorText: '',
+        //     }),
+        //     id: 0,
+        // };
+        // ws.send(JSON.stringify(updatedMessage));
+        // registerPlayer(name, password, ws.index);
+        // console.log(`Client ${ws.index} register: player name - ${name}`);
+        // updateRooms();
+        // updateWinners();
+        if (!hasWhitespace(name)){
+          if (!hasWhitespace(password)){
+              const updatedMessage : Request = {
+                  type: 'reg',
+                  data: JSON.stringify({
+                      name,
+                      index: ws.index,
+                      error: false,
+                      errorText: '',
+                  }),
+                  id: 0,
+              };
+              ws.send(JSON.stringify(updatedMessage));
+              registerPlayer(name, password, ws.index);
+              console.log(`Client ${ws.index} register: player name - ${name}`);
+              updateRooms();
+              updateWinners();
+          } 
+          else {
+              const updatedMessage : Request = {
+                  type: 'reg',
+                  data: JSON.stringify({
+                      name,
+                      index: ws.index,
+                      error: true,
+                      errorText: 'Please check password',
+                  }),
+                  id: 0,
+              };
+
+              ws.send(JSON.stringify(updatedMessage));
+          }
+
+      }
+      else {
+          const updatedMessage : Request = {
+              type: 'reg',
+              data: JSON.stringify({
+                  name,
+                  index: ws.index,
+                  error: true,
+                  errorText: 'Please type name',
+              }),
+              id: 0,
+          };
+
+          ws.send(JSON.stringify(updatedMessage));
+      }
     }
 };
 
@@ -289,6 +343,78 @@ export const userAttack = (receivedMessage: Request) => {
     }
 };
 
+export const randomAttack = (receivedMessage: Request) => {
+  const { gameId, indexPlayer } = JSON.parse(receivedMessage.data);
+
+  const checkLastStep = (idGame: number) => {
+      const player = nextPlayer.find((player) => player.idGame === idGame);
+      if (player && player.lastSteps.length > 0) {
+        const lastStep = player.lastSteps[player.lastSteps.length - 1];
+        return lastStep;
+      } else {
+        console.log(`No last step found for game ${idGame}`);
+      }
+    };
+  const x =  Math.floor(Math.random() * 10);
+  const y =  Math.floor(Math.random() * 10);
+  if (indexPlayer===checkLastStep(gameId)) {
+      const status = getValueByXY(gameId, indexPlayer, x, y, 'attack');
+      turnUser(receivedMessage, status);
+      const filteredClients = wsclients.filter((client) => {
+          const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
+          return playerIndex !== undefined;
+      });
+      filteredClients.forEach((client) => {
+          const updatedMessage: Request = {
+              type: 'attack',
+              data: JSON.stringify({
+                  position: {
+                      x: x,
+                      y: y,
+                  },
+                  currentPlayer: indexPlayer,
+                  status: status,
+              }),
+              id: 0,
+          };
+          client.send(JSON.stringify(updatedMessage));
+      });
+      const player = killedList.find((player) => player.idPlayer === indexPlayer);
+      if (player) {
+        if (player.ships.length === 10) {
+          console.log('Game Over');
+          filteredClients.forEach((client) => {
+              const updatedMessage: Request = {
+                  type: 'finish',
+                  data: JSON.stringify({
+                      winPlayer: indexPlayer,
+                  }),
+                  id: 0,
+              };
+              client.send(JSON.stringify(updatedMessage));
+          });
+          const name = getPlayerNameByIndex(indexPlayer);  
+          updatePlayerWins(name, players);
+          const transformedPlayers = players.map((player) => {
+              return {
+                name: player.name,
+                wins: player.wins,
+              };
+            });
+          filteredClients.forEach((client) => {
+              const updatedMessage: Request = {
+                  type: 'update_winners',
+                  data: JSON.stringify(transformedPlayers),
+                  id: 0,
+              };
+              client.send(JSON.stringify(updatedMessage));
+          });
+        }
+      } 
+  }
+};
+
+
 export const attackPlayer = (x: number, y: number, indexPlayer: string, status: string) => {
   const data = indexes.find((user) => user.idPlayer === indexPlayer);
   if (!data) {
@@ -347,4 +473,48 @@ export const turnUser = (receivedMessage:Request, status: string|undefined) => {
    });
    addLastToList(gameId, currentPlayer);
   return currentPlayer;
+};
+
+export const playWithBot = (receivedMessage: Request, ws:CustomWebSocket) => {
+  const updatedMessage = {
+      type: 'add',
+      data:'',
+      id: 0,
+    };
+  ws.send(JSON.stringify(updatedMessage));
+};
+
+export const finishGame = (ws:CustomWebSocket) => {
+  const data = indexes.find((user) => user.idPlayer === ws.index);
+  if (!data) {
+      return;
+  }
+  const gameId = data.idGame;
+  const filteredClients = wsclients.filter((client) => {
+      const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
+      return playerIndex !== undefined;
+  });
+  const updatedIndexPlayer = indexes.find((data: IIndex) => data.idGame === gameId && data.idPlayer !== ws.index);
+  filteredClients.forEach((client) => {
+      if(updatedIndexPlayer){
+          const updatedMessage : Request = {
+              type: 'disconnect',
+              data: '',
+              id: 0,
+            };
+          client.send(JSON.stringify(updatedMessage));
+      }
+  });
+  filteredClients.forEach((client) => {
+      if(updatedIndexPlayer){
+      const updatedMessage: Request = {
+          type: 'finish',
+          data: JSON.stringify({
+              winPlayer: client.index,
+          }),
+          id: 0,
+      };
+      client.send(JSON.stringify(updatedMessage));
+  }
+  });
 };

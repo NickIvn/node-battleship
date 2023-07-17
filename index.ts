@@ -2,7 +2,7 @@ import { httpServer } from './src/http_server/index';
 import { WebSocketServer } from 'ws';
 import {v4 as uuid} from 'uuid';
 import { CustomWebSocket, Request, INextPlayer } from './src/types';
-import { userRegistration, updateRoom, createGame, startGame, userAttack, addMatrix } from './src/sender/index';
+import { userRegistration, updateRoom, createGame, startGame, userAttack, addMatrix, randomAttack, playWithBot, finishGame } from './src/sender/index';
 
 const HTTP_PORT = 8181;
 export const wsclients:CustomWebSocket[] = [];
@@ -46,12 +46,22 @@ wss.on('connection', (ws:CustomWebSocket)=>{
       case 'attack':
         userAttack(receivedMessage);
         break;
+        case 'randomAttack':
+          randomAttack(receivedMessage);
+          break;
+        case 'single_play':
+          playWithBot(receivedMessage, ws);
+          break;
+        case 'disconnect':
+          finishGame(ws);
+          break;
       default:
          console.log(`Uknown message type ${type}`);
         break;
     }
   });
   ws.on('close', () => {
+    finishGame(ws);
     console.log(`Disconnect client ${id}`);
     const numberOfClients = wss.clients.size;
     console.log(`Numbers of clients: ${numberOfClients} at this moment`);
