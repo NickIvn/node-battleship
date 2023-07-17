@@ -60,7 +60,7 @@ export const updateRoom = (ws: CustomWebSocket, roomId: number) => {
   if (existingRoomIndex !== -1) {
     roomUsers.splice(existingRoomIndex, 1);
     console.log(`Room with user index ${ws.index} already exists. Deleting the room.`);
-    console.log(roomUsers);
+    // console.log(roomUsers);
   }
 
   const rooms = {
@@ -81,7 +81,7 @@ export const updateRoom = (ws: CustomWebSocket, roomId: number) => {
   };
   sendToAllClients(updatedMessage, wsclients);
   console.log(`Create room N${roomId}`);
-  console.log(roomUsers);
+  // console.log(roomUsers);
 };
 
 export const createGame = (ws: CustomWebSocket, idGame: number, receivedMessage: Request) => {
@@ -92,9 +92,11 @@ export const createGame = (ws: CustomWebSocket, idGame: number, receivedMessage:
   // Если комната существует, добавить игрока в комнату
   if (roomIndex !== -1) {
       const name = getPlayerNameByIndex(ws.index);
-      const creatorIndex = roomUsers[roomIndex].roomUsers[0].index; // Индекс создателя комнаты
+      // const creatorIndex = roomUsers[roomIndex].roomUsers[0].index;
+      // Индекс создателя комнаты
     
     // Проверка, что игрок не является создателем комнаты
+    const creatorIndex = roomUsers[roomIndex].roomUsers[0].index; 
       if (ws.index !== creatorIndex) {
           const player = {
           name: name,
@@ -155,14 +157,14 @@ export const addMatrix = (receivedMessage: Request) => {
 
 export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
   const { ships, indexPlayer } = JSON.parse(receivedMessage.data);
-
+  const status = 'miss';
   if (firstPlayerMessage.length === 0) {
       firstPlayerMessage.push(receivedMessage);
-      console.log(ws.index);
-      console.log(firstPlayerMessage);
-      console.log(JSON.parse(firstPlayerMessage[0].data).indexPlayer);
+      // console.log(ws.index);
+      // console.log(firstPlayerMessage);
+      // console.log(JSON.parse(firstPlayerMessage[0].data).indexPlayer);
   } else {
-      console.log(ws.index);
+      // console.log(ws.index);
       const filteredClient = wsclients.find((client) => client.index === JSON.parse(firstPlayerMessage[0].data).indexPlayer);
       if (filteredClient) {
           const updatedMessage: Request = {
@@ -173,7 +175,7 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
               }),
               id: 0,
           };
-          console.log(filteredClient.index);
+          // console.log(filteredClient.index);
           filteredClient.send(JSON.stringify(updatedMessage));
           const firstPlayerMessageToSend: Request = {
               type: 'start_game',
@@ -184,23 +186,21 @@ export const startGame = (ws: CustomWebSocket, receivedMessage: Request) => {
               id: 0,
           };
           ws.send(JSON.stringify(firstPlayerMessageToSend));
-          console.log(firstPlayerMessageToSend);
-          console.log(indexPlayer);
+          turnUser(receivedMessage, status);
+          // console.log(firstPlayerMessageToSend);
+          // console.log(indexPlayer);
           resetFirstPlayer();
         } else {
-          console.log('Клиент с указанным индексом не найден.');
+          console.log('Client has not found');
         }
   }
 };
-
-
-
 
 export const userAttack = (receivedMessage: Request) => {
   const { gameId, x, y, indexPlayer } = JSON.parse(receivedMessage.data);
 
   const status = getValueByXY(gameId, indexPlayer, x, y);
-  // turnUser(receivedMessage, status);
+  turnUser(receivedMessage, status);
   const filteredClients = wsclients.filter((client) => {
       const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
       return playerIndex !== undefined;
@@ -251,48 +251,51 @@ export const attackPlayer = (x: number, y: number, indexPlayer: string, status: 
 
 
 
-export const turnUser = (receivedMessage:Request, status = 'start') => {
+export const turnUser = (receivedMessage:Request, status: string|undefined) => {
   const {indexPlayer } = JSON.parse(receivedMessage.data);
   const data = indexes.find((user) => user.idPlayer === indexPlayer);
   if (!data) {
       return;
   }
   const gameId = data.idGame;
-  const indexesByGameId = indexes.filter((item) => item.idGame === gameId);
-  const gamePlayers = indexesByGameId.map((item) => item.idPlayer);
-  let randomPlayer:any;
-  if (status === 'miss' || status === 'killed'){
-      randomPlayer = indexPlayer;
-      console.log(status);
-  } else {
-      const randomIndex = Math.floor(Math.random() * gamePlayers.length);
-      randomPlayer = gamePlayers[randomIndex];
-      console.log(randomPlayer);
-      console.log('other');
-      return randomPlayer;
-  }
-  const dataIndex = indexes.find((user) => user.idPlayer === randomPlayer);
-  if (!dataIndex) {
-    return;
-  }
-  const randomPlayerIndex = dataIndex.index;
-  
 
+  // const indexesByGameId = indexes.filter((item) => item.idGame === gameId);
+  // const gamePlayers = indexesByGameId.map((item) => item.idPlayer);
+  // let randomPlayer:any;
+  // if (status === 'miss' || status === 'killed'){
+  //     randomPlayer = indexPlayer;
+  //     console.log(status);
+  // } else {
+  //     const randomIndex = Math.floor(Math.random() * gamePlayers.length);
+  //     randomPlayer = gamePlayers[randomIndex];
+  //     console.log(randomPlayer);
+  //     console.log('other');
+  //     return randomPlayer;
+  // }
+  // const dataIndex = indexes.find((user) => user.idPlayer === randomPlayer);
+  // if (!dataIndex) {
+  //   return;
+  // }
+  // const randomPlayerIndex = dataIndex.index;
+  
+  const anotherPlayer = indexes.find((user) => user.idGame === gameId && user.index !== indexPlayer);
   const filteredClients = wsclients.filter((client) => {
       const playerIndex = indexes.find((user) => user.idGame === gameId && user.index === client.index);
       return playerIndex !== undefined;
   });
 
+  const currentPlayer = (status === 'miss' || status === 'killed') ? (anotherPlayer?.idPlayer || '') : data.idPlayer;
+
   filteredClients.forEach((client) => {
-      if (client.index === randomPlayerIndex) {
+      // if (client.index === randomPlayerIndex) {
           const updatedMessage: Request = {
               type: 'turn',
               data: JSON.stringify({
-                  currentPlayer: randomPlayer,
+                  currentPlayer: currentPlayer,
               }),
               id: 0,
           };
+          console.log(client.index);
           client.send(JSON.stringify(updatedMessage));
-      }
   });
 };

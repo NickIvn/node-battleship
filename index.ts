@@ -40,13 +40,11 @@ wss.on('connection', (ws:CustomWebSocket)=>{
         break;
       case 'add_user_to_room':
         idGame++;
-        // idPlayer++;
         createGame(ws, idGame, receivedMessage);
         break;
       case 'add_ships':
         addMatrix(receivedMessage);
         startGame(ws, receivedMessage);
-        // turnUser(ws, receivedMessage);
         break;
       case 'attack':
         userAttack(receivedMessage);
